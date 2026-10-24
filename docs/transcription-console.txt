@@ -1,0 +1,78 @@
+
+==========================================================================================
+ TP 5 - Spring Framework et Hibernate dans un microservice
+ Conteneur Spring, DAO generique <T> et transactions declaratives
+==========================================================================================
+ JDK          : 21.0.9 (Oracle Corporation)
+ Spring       : 5.3.39
+ Hibernate    : 5.6.15.Final
+ Base         : jdbc:mysql://localhost:3306/product_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
+ Configuration: mliaedu.tp5.config.ApplicationConfig (20 beans)
+==========================================================================================
+
+
+[0] Conteneur Spring : injection et câblage des dépendances
+--------------------------------------------------------------------------------
+  [OK]    Configuration ApplicationConfig enregistrée                | 20 bean(s) déclaré(s)
+  [OK]    Fabrique de sessions Hibernate exposée                     | SessionFactoryImpl
+  [OK]    Gestionnaire de transactions                               | HibernateTransactionManager
+  [OK]    Proxy transactionnel sur ProductService                    | ProductServiceImpl
+  [OK]    Proxy transactionnel sur CategorieService                  | CategorieServiceImpl
+  [OK]    Connexion JDBC opérationnelle                              | MySQL 5.5.5-10.4.32-MariaDB
+
+[1] Remise à zéro du catalogue
+--------------------------------------------------------------------------------
+  [OK]    Produits restants après purge                              | 0
+  [OK]    Rayons restants après purge                                | 0
+
+[2] Création des rayons puis des produits (couche service)
+--------------------------------------------------------------------------------
+  rayons créés      -> Categorie#1 INFO "Informatique réseau" | Categorie#2 RESEAU "Réseau et connectique"
+  produits créés    -> 4 lignes
+  [OK]    Rayons persistés                                           | 2
+  [OK]    Produits persistés                                         | 4
+  [OK]    Identifiant généré par la base                             | 1
+  [OK]    Rayon rattaché au produit                                  | INFO
+
+[3] Lecture, mise à jour et indicateurs
+--------------------------------------------------------------------------------
+  parReference      -> Product#3 [SKU-102] Routeur Wi-Fi 6 (129.99 EUR, rayon RESEAU)
+  [OK]    Produit retrouvé par sa référence                          | Routeur Wi-Fi 6
+  [OK]    Nouveau prix enregistré                                    | 119.99
+  [OK]    Taille du catalogue                                        | 4
+  [OK]    Produits au-dessus de 80 EUR                               | 2
+  [OK]    Prix moyen du catalogue                                    | 65.35
+
+[4] Requêtes HQL du DAO générique et jointure
+--------------------------------------------------------------------------------
+  [OK]    Produits du rayon INFO                                     | 2
+  [OK]    Répartition par rayon                                      | INFO=2, RESEAU=2
+  [OK]    Rayons chargés avec leurs produits                         | 4
+  [OK]    Produits du rayon INFO (via le rayon)                      | 2
+  [OK]    Comptage générique du DAO                                  | 2
+
+[5] Validations métier et transactions déclaratives
+--------------------------------------------------------------------------------
+  [OK]    Prix négatif refusé                                        | IllegalArgumentException : Le prix ne peut pas être négatif : -1.0
+  [OK]    Référence déjà utilisée refusée                            | IllegalArgumentException : La référence SKU-100 est déjà utilisée
+  [OK]    Rayon inconnu refusé                                       | IllegalArgumentException : Le rayon INCONNU n'existe pas
+  [OK]    Import atomique : une ligne invalide annule le lot         | IllegalArgumentException : Le prix ne peut pas être négatif : -5.0
+  [OK]    Nombre de produits après rollback du lot                   | 4
+[WARN] SQL Error: 1062, SQLState: 23000
+[ERROR] Duplicate entry 'SKU-900' for key 'uk_product_reference'
+  contrainte SQL    -> Duplicate entry 'SKU-900' for key 'uk_product_reference'
+  [OK]    Contrainte d'unicité appliquée et transaction annulée      | insertion en double refusée, produits=4
+  [OK]    Aucune ligne partielle après rollback                      | 4
+
+[6] Suppressions et intégrité référentielle
+--------------------------------------------------------------------------------
+  [OK]    Produit retiré                                             | true
+  [OK]    Catalogue après suppression                                | 3
+  [OK]    Rayon non vide protégé                                     | IllegalStateException : Le rayon INFO contient encore 2 produit(s)
+  [OK]    Rayon vide supprimé                                        | true
+  [OK]    Rayons restants                                            | 2
+
+==========================================================================================
+ BILAN : 34 vérification(s) conforme(s) sur 34
+ État du microservice : conteneur, DAO générique et transactions opérationnels.
+==========================================================================================
